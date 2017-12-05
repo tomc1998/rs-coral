@@ -54,3 +54,27 @@ Component instances will have an ID associated with them, which can be used for
 referencing in layout or paint trees. This also lends itself to an accompanying
 ECS.
 
+## Component slots
+'Slots' are used to insert components as children into parts of the component.
+For example, consider a 'container' node which simply centres its child. That
+child will change depending on what the parent passes to it.
+
+The concept of 'slots' doesn't exist in the rust code - instead, component
+instances are just passed into constructors. Slots are simply a way of
+describing how a component can be inserted into a slot in the 3pcdf.
+
+## Component object
+The component object will need the following:
+- Layout method (Given size constraints computes size)
+- Paint method (Given a rect position generates vertex data)
+- Any local state
+- Function
+- Component ID creation (global mutable counter)
+
+### Trait functions
+The following will be trait defined functions:
+- get_size() -> Size
+- layout() -> Box<Fn(constraints) -> new size>
+- paint(rect)
+- get_children() -> Vec<Box<Component>>
+

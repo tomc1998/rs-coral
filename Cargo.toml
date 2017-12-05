@@ -1,6 +1,11 @@
 [package]
-name = "rust-gui-framework"
+name = "coral"
 version = "0.1.0"
 authors = ["Thomas Cheng <thomascheng1998@googlemail.com>"]
 
 [dependencies]
+quick-gfx = { git = "https://github.com/tomc1998/rs-quick-gfx.git" }
+
+# Logging + implementation
+log = "0.3"
+simplelog = "^0.4.3" 
