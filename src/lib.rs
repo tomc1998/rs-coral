@@ -43,8 +43,11 @@ impl Coral {
     pub fn start(&mut self) {
         info!("Starting coral...");
         let mut closed = false;
-        let g = qgfx::QGFX::new();
+        let mut g = qgfx::QGFX::new();
+        // We're just re-rendering for 60fps right now.
+        let frame_time = std::time::Duration::from_millis(17);
         while !closed {
+            let start_frame_time = std::time::SystemTime::now();
             g.poll_events(|ev| match ev {
                 qgfx::Event::WindowEvent {
                     event: ev,
@@ -59,6 +62,12 @@ impl Coral {
                 },
                 _ => (),
             });
+            g.render();
+            let elapsed = start_frame_time.elapsed().unwrap();
+            if frame_time > elapsed {
+                let time_to_sleep = frame_time - elapsed;
+                std::thread::sleep(time_to_sleep);
+            }
         }
     }
 }
