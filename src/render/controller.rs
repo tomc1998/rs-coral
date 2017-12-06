@@ -1,10 +1,17 @@
 use std::ops::{Deref, DerefMut};
+use std::boxed::Box;
 use qgfx::RendererController;
 
 /// Currently a wrapper around the qgfx controller. Just allowing for different graphical backends
 /// in the future.
 #[derive(Clone)]
-pub struct Controller<'a>(RendererController<'a>);
+pub struct Controller<'a>(Box<RendererController<'a>>);
+
+impl<'a> Controller<'a> {
+    pub fn new(c: Box<RendererController<'a>>) -> Controller<'a> {
+        Controller(c)
+    }
+}
 
 impl<'a> Deref for Controller<'a> {
     type Target = RendererController<'a>;

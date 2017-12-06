@@ -3,15 +3,23 @@ extern crate log;
 extern crate quick_gfx as qgfx;
 extern crate simplelog;
 
+mod config;
 mod render;
 pub mod common;
-pub mod component;
+mod component;
+pub mod utils;
 
-use common::Constraints;
+pub use config::Config;
+pub use component::Component;
+pub use render::Controller as PaintController;
+
+use common::{Constraints, ScreenVec};
 
 pub struct Coral {
     /// The current root node in the component tree
-    root: Option<Box<component::Component>>,
+    root: Option<Box<Component>>,
+    window_size: ScreenVec,
+    pub config: Config,
 }
 
 impl Coral {
@@ -24,30 +32,64 @@ impl Coral {
 
     /// Initialise the library.
     pub fn new() -> Coral {
-        let coral = Coral { root: None };
+        let coral = Coral {
+            root: None,
+            window_size: ScreenVec::new(0, 0),
+            config: Default::default(),
+        };
         coral.init_logger();
         return coral;
     }
 
-    fn relayout(&mut self, w: u32, h: u32) {
-        info!("Resizing to ({}, {})", w, h);
+    fn relayout(&mut self) {
         if self.root.is_none() {
             return;
         }
         let root = self.root.as_mut().unwrap();
+        let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
+        info!("Resizing to ({}, {})", w, h);
         root.layout(Constraints::new(w, h, w, h));
+    }
+
+    fn repaint(&self, g: &mut qgfx::QGFX) {
+        if self.root.is_none() {
+            return;
+        }
+        info!("Repainting");
+        let root = self.root.as_ref().unwrap();
+        let controller = render::Controller::new(g.get_renderer_controller());
+        if self.config.debug_drawing {
+            render::debug_render(&controller, root.as_ref());
+        }
+        else {
+            root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
+        }
+    }
+
+    /// Perform a full layout / paint / rasterize update
+    fn layout_paint_render(&mut self, g: &mut qgfx::QGFX) {
+        self.relayout();
+        self.repaint(g);
+        g.recv_data();
+        g.render();
+    }
+
+    pub fn set_root(&mut self, root: Box<Component>) {
+        self.root = Some(root);
     }
 
     /// Starts the application. This will initialise an OpenGL context, and block until the
     /// application closes.
     pub fn start(&mut self) {
         info!("Starting coral...");
+        self.relayout();
         let mut closed = false;
         let mut g = qgfx::QGFX::new();
         // We're just re-rendering for 60fps right now.
         let frame_time = std::time::Duration::from_millis(17);
         while !closed {
             let start_frame_time = std::time::SystemTime::now();
+            let mut needs_repaint = false;
             g.poll_events(|ev| match ev {
                 qgfx::Event::WindowEvent {
                     event: ev,
@@ -56,13 +98,16 @@ impl Coral {
                     // Poll events to check if window has been closed
                     qgfx::WindowEvent::Closed => closed = true,
                     qgfx::WindowEvent::Resized(w, h) => {
-                        self.relayout(w, h);
+                        self.window_size = ScreenVec::new(w as i32, h as i32);
+                        needs_repaint = true;
                     }
                     _ => (),
                 },
                 _ => (),
             });
-            g.render();
+
+            if needs_repaint { self.layout_paint_render(&mut g); }
+
             let elapsed = start_frame_time.elapsed().unwrap();
             if frame_time > elapsed {
                 let time_to_sleep = frame_time - elapsed;

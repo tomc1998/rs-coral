@@ -1,19 +1,19 @@
 /// Layout constraints.
 #[derive(Clone, Copy, Hash, Eq, PartialEq)]
 pub struct Constraints {
-    pub min_x: u32,
-    pub min_y: u32,
-    pub max_x: u32,
-    pub max_y: u32,
+    pub min_w: u32,
+    pub min_h: u32,
+    pub max_w: u32,
+    pub max_h: u32,
 }
 
 impl Constraints {
-    pub fn new(min_x: u32, min_y: u32, max_x: u32, max_y: u32) -> Constraints {
+    pub fn new(min_w: u32, min_h: u32, max_w: u32, max_h: u32) -> Constraints {
         Constraints {
-            min_x,
-            min_y,
-            max_x,
-            max_y,
+            min_w,
+            min_h,
+            max_w,
+            max_h,
         }
     }
 }
