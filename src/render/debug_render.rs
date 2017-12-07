@@ -1,9 +1,10 @@
 use utils;
-use {PaintController, Component};
+use PaintController;
+use entity::Entity;
 use common::Color;
 
 /// Perform a debug render to test layout. Children will be drawn on top of parents.
-pub fn debug_render(c: &PaintController, root: &Component) {
+pub fn debug_render(c: &PaintController, root: &Entity) {
     let num_components = utils::count_component_tree(root);
     let mut visit_list = Vec::new();
     visit_list.push((root.get_offset(), root));

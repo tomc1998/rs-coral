@@ -9,3 +9,6 @@ quick-gfx = { git = "https://github.com/tomc1998/rs-quick-gfx.git" }
 # Logging + implementation
 log = "0.3"
 simplelog = "^0.4.3" 
+
+# ECS
+specs = "0.10.0"

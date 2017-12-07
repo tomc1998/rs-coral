@@ -3,22 +3,25 @@ extern crate log;
 extern crate quick_gfx as qgfx;
 extern crate simplelog;
 
+extern crate specs;
+
 mod config;
 mod render;
 pub mod common;
-mod component;
+pub mod entity;
 pub mod utils;
 
 pub use config::Config;
-pub use component::Component;
 pub use render::Controller as PaintController;
 
+use entity::Entity;
 use common::{Constraints, ScreenVec};
 
 pub struct Coral {
-    /// The current root node in the component tree
-    root: Option<Box<Component>>,
+    /// The current root node in the entity tree
+    root: Option<Entity>,
     window_size: ScreenVec,
+    world: specs::World,
     pub config: Config,
 }
 
@@ -30,25 +33,32 @@ impl Coral {
         ]).unwrap();
     }
 
+    fn setup_world(&mut self) {
+        self.world.register::<entity::ChildrenComponent>();
+        self.world.register::<entity::LayoutComponent>();
+    }
+
     /// Initialise the library.
     pub fn new() -> Coral {
-        let coral = Coral {
+        let mut coral = Coral {
             root: None,
             window_size: ScreenVec::new(0, 0),
             config: Default::default(),
+            world: specs::World::new(),
         };
+        coral.setup_world();
         coral.init_logger();
         return coral;
     }
 
-    fn relayout(&mut self) {
+    fn relayout(&self) {
         if self.root.is_none() {
             return;
         }
-        let root = self.root.as_mut().unwrap();
+        let root = self.root.unwrap();
         let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
         info!("Resizing to ({}, {})", w, h);
-        root.layout(Constraints::new(w, h, w, h));
+        entity::layout(root, Constraints::new(w, h, w, h), &self.world);
     }
 
     fn repaint(&self, g: &mut qgfx::QGFX) {
@@ -59,10 +69,10 @@ impl Coral {
         let root = self.root.as_ref().unwrap();
         let controller = render::Controller::new(g.get_renderer_controller());
         if self.config.debug_drawing {
-            render::debug_render(&controller, root.as_ref());
+            //render::debug_render(&controller, root);
         }
         else {
-            root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
+            //root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
         }
     }
 
@@ -74,7 +84,7 @@ impl Coral {
         g.render();
     }
 
-    pub fn set_root(&mut self, root: Box<Component>) {
+    pub fn set_root(&mut self, root: Entity) {
         self.root = Some(root);
     }
 
