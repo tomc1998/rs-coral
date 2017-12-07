@@ -18,7 +18,7 @@ use entity::{Entity, LayoutComponent, ChildrenComponent, LayoutStrategy};
 use common::{Constraints, ScreenVec};
 
 /// A list of systems used by the Coral instance.
-#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+#[derive(Clone)]
 struct Systems {
     layout_system: entity::LayoutSystem,
 }
@@ -67,36 +67,35 @@ impl Coral {
         return coral;
     }
 
-    fn repaint(&self, g: &mut qgfx::QGFX) {
-        if self.root.is_none() {
-            return;
-        }
-        info!("Repainting");
-        let root = self.root.unwrap();
-        let controller = render::Controller::new(g.get_renderer_controller());
-        if self.config.debug_drawing {
-            render::debug_render(&controller, root, &self.world);
-        }
-        else {
-            unimplemented!();
-            //root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
-        }
-    }
-
     /// Perform a full layout / paint / rasterize update
     fn layout_paint_render(&mut self, g: &mut qgfx::QGFX) {
         if self.root.is_none() {
             warn!("Attempting to re-render, but no root node specified!")
         }
         else {
+            // Setup systems for layout + drawing
+            // Layout system:
             let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
             self.systems.layout_system.constraints = Constraints::new(w, h, w, h);
-            let mut dispatcher = specs::DispatcherBuilder::new()
-                .add(self.systems.layout_system, "layout", &[])
-                .build();
-            dispatcher.dispatch(&self.world.res);
+            let mut dispatcher_builder = specs::DispatcherBuilder::new()
+                .add(self.systems.layout_system, "layout", &[]);
+
+            // Paint system:
+            let controller = render::Controller::new(g.get_renderer_controller());
+            if self.config.debug_drawing {
+                let mut debug_render_system = render::DebugRenderSystem::new();
+                debug_render_system.c = Some(controller.clone());
+                debug_render_system.root = self.root;
+                dispatcher_builder = dispatcher_builder.add_thread_local(debug_render_system);
+            }
+            else {
+                unimplemented!();
+                //root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
+            }
+
+            // Run it all
+            dispatcher_builder.build().dispatch(&self.world.res);
             self.world.maintain();
-            self.repaint(g);
         }
         g.recv_data();
         g.render();

@@ -5,7 +5,7 @@ use std::ops::Add;
 pub use self::layout::Constraints;
 
 /// A struct for an on-screen vector - size or position.
-#[derive(Clone, Copy, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct ScreenVec {
     pub x: i32,
     pub y: i32,
@@ -22,7 +22,7 @@ impl Add for ScreenVec {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
