@@ -9,7 +9,7 @@ use common::ScreenVec;
 /// 
 /// If the given entity has the wrong amount of children when laying out, then an assertion will be
 /// thrown (when in debug mode).
-#[derive(Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum LayoutStrategy {
 
     /// Num children: 1
@@ -42,7 +42,7 @@ impl LayoutStrategy {
 
 /// A component defining a component's layout - the layout strategy, the current offset, and its
 /// current size.
-#[derive(Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct LayoutComponent {
     pub offset: ScreenVec,
     pub size: ScreenVec,

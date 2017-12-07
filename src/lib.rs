@@ -17,12 +17,25 @@ pub use render::Controller as PaintController;
 use entity::{Entity, LayoutComponent, ChildrenComponent, LayoutStrategy};
 use common::{Constraints, ScreenVec};
 
+/// A list of systems used by the Coral instance.
+#[derive(Clone, Debug, Hash, Eq, PartialEq)]
+struct Systems {
+    layout_system: entity::LayoutSystem,
+}
+impl Systems {
+    fn new() -> Systems {
+        Systems {
+            layout_system: entity::LayoutSystem::new(),
+        }
+    }
+}
+
 pub struct Coral {
     /// The current root node in the entity tree
     root: Option<Entity>,
     /// The layout system being used
-    layout_system: entity::LayoutSystem,
     window_size: ScreenVec,
+    systems: Systems,
     world: specs::World,
     pub config: Config,
 }
@@ -45,7 +58,7 @@ impl Coral {
         let mut coral = Coral {
             root: None,
             window_size: ScreenVec::new(0, 0),
-            layout_system: entity::LayoutSystem::new(),
+            systems: Systems::new(),
             config: Default::default(),
             world: specs::World::new(),
         };
@@ -77,9 +90,9 @@ impl Coral {
         }
         else {
             let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
-            self.layout_system.constraints = Constraints::new(w, h, w, h);
+            self.systems.layout_system.constraints = Constraints::new(w, h, w, h);
             let mut dispatcher = specs::DispatcherBuilder::new()
-                .add(self.layout_system, "layout", &[])
+                .add(self.systems.layout_system, "layout", &[])
                 .build();
             dispatcher.dispatch(&self.world.res);
             self.world.maintain();
@@ -91,7 +104,7 @@ impl Coral {
 
     pub fn set_root(&mut self, root: Entity) {
         self.root = Some(root);
-        self.layout_system.root = Some(root);
+        self.systems.layout_system.root = Some(root);
     }
 
     /// Create an entity and add it to the world. This will NOT trigger a redraw - this must be

@@ -1,5 +1,5 @@
 /// Layout constraints.
-#[derive(Clone, Copy, Hash, Eq, PartialEq)]
+#[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
 pub struct Constraints {
     pub min_w: u32,
     pub min_h: u32,

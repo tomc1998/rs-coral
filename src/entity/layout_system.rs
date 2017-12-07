@@ -9,7 +9,7 @@ use common::{Constraints, ScreenVec};
 use specs;
 
 /// The layout system. Takes extra parameters via member variables before running.
-#[derive(Hash, Clone, Copy, Eq, PartialEq)]
+#[derive(Hash, Debug, Clone, Copy, Eq, PartialEq)]
 pub struct LayoutSystem {
     /// The root entity to layout from when run
     pub root: Option<Entity>,
