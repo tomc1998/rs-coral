@@ -144,6 +144,7 @@ impl Coral {
                         self.window_size = ScreenVec::new(w as i32, h as i32);
                         needs_repaint = true;
                     }
+                    qgfx::WindowEvent::Refresh => needs_repaint = true,
                     _ => (),
                 },
                 _ => (),
