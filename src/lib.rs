@@ -58,7 +58,9 @@ impl Coral {
         let root = self.root.unwrap();
         let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
         info!("Resizing to ({}, {})", w, h);
-        entity::layout(root, Constraints::new(w, h, w, h), &self.world);
+        let mut layout_storage = self.world.write();
+        let children_storage = self.world.read();
+        entity::layout(root, Constraints::new(w, h, w, h), &mut layout_storage, &children_storage);
     }
 
     fn repaint(&self, g: &mut qgfx::QGFX) {

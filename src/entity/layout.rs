@@ -6,9 +6,31 @@ use common::ScreenVec;
 
 /// A layout strategy - when laying out, how should this entity position its children and size
 /// itself according to the input constraints?
+/// 
+/// If the given entity has the wrong amount of children when laying out, then an assertion will be
+/// thrown (when in debug mode).
 #[derive(Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub enum LayoutStrategy {
+
+    /// Num children: 1
+    /// 
+    /// Center the given child. Child can expand to fill the max constraints of the parent.
     Center,
+
+    /// Num children: 0
+    /// 
+    /// Maximise this component's size according to the constraints.
+    Max
+
+}
+
+impl LayoutStrategy {
+    pub fn expected_children(&self) -> usize {
+        match *self {
+            LayoutStrategy::Center => 1,
+            LayoutStrategy::Max => 0,
+        }
+    }
 }
 
 /// A component defining a component's layout - the layout strategy, the current offset, and its
