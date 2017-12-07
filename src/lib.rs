@@ -86,7 +86,7 @@ impl Coral {
                 let mut debug_render_system = render::DebugRenderSystem::new();
                 debug_render_system.c = Some(controller.clone());
                 debug_render_system.root = self.root;
-                dispatcher_builder = dispatcher_builder.add_thread_local(debug_render_system);
+                dispatcher_builder = dispatcher_builder.add(debug_render_system, "paint", &["layout"]);
             }
             else {
                 unimplemented!();
