@@ -68,12 +68,13 @@ impl Coral {
             return;
         }
         info!("Repainting");
-        let root = self.root.as_ref().unwrap();
+        let root = self.root.unwrap();
         let controller = render::Controller::new(g.get_renderer_controller());
         if self.config.debug_drawing {
-            //render::debug_render(&controller, root);
+            render::debug_render(&controller, root, &self.world);
         }
         else {
+            unimplemented!();
             //root.paint(&controller, ScreenVec::new(0, 0), self.window_size);
         }
     }

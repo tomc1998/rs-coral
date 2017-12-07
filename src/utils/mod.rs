@@ -16,8 +16,7 @@ pub fn count_component_tree(root: Entity, world: &World) -> usize {
     while !visit_list.is_empty() {
         count += 1;
         let node = visit_list.remove(0);
-        let children_component = get_entity_children(root, world);
-        for c in get_entity_children(root, world) { visit_list.push(c); }
+        for c in get_entity_children(node, world) { visit_list.push(c); }
     }
     return count;
 }
