@@ -20,6 +20,8 @@ use common::{Constraints, ScreenVec};
 pub struct Coral {
     /// The current root node in the entity tree
     root: Option<Entity>,
+    /// The layout system being used
+    layout_system: entity::LayoutSystem,
     window_size: ScreenVec,
     world: specs::World,
     pub config: Config,
@@ -43,24 +45,13 @@ impl Coral {
         let mut coral = Coral {
             root: None,
             window_size: ScreenVec::new(0, 0),
+            layout_system: entity::LayoutSystem::new(),
             config: Default::default(),
             world: specs::World::new(),
         };
         coral.setup_world();
         coral.init_logger();
         return coral;
-    }
-
-    fn relayout(&self) {
-        if self.root.is_none() {
-            return;
-        }
-        let root = self.root.unwrap();
-        let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
-        info!("Resizing to ({}, {})", w, h);
-        let mut layout_storage = self.world.write();
-        let children_storage = self.world.read();
-        entity::layout(root, Constraints::new(w, h, w, h), &mut layout_storage, &children_storage);
     }
 
     fn repaint(&self, g: &mut qgfx::QGFX) {
@@ -81,14 +72,26 @@ impl Coral {
 
     /// Perform a full layout / paint / rasterize update
     fn layout_paint_render(&mut self, g: &mut qgfx::QGFX) {
-        self.relayout();
-        self.repaint(g);
+        if self.root.is_none() {
+            warn!("Attempting to re-render, but no root node specified!")
+        }
+        else {
+            let (w, h) = (self.window_size.x as u32, self.window_size.y as u32);
+            self.layout_system.constraints = Constraints::new(w, h, w, h);
+            let mut dispatcher = specs::DispatcherBuilder::new()
+                .add(self.layout_system, "layout", &[])
+                .build();
+            dispatcher.dispatch(&self.world.res);
+            self.world.maintain();
+            self.repaint(g);
+        }
         g.recv_data();
         g.render();
     }
 
     pub fn set_root(&mut self, root: Entity) {
         self.root = Some(root);
+        self.layout_system.root = Some(root);
     }
 
     /// Create an entity and add it to the world. This will NOT trigger a redraw - this must be
@@ -125,7 +128,6 @@ impl Coral {
     /// application closes.
     pub fn start(&mut self) {
         info!("Starting coral...");
-        self.relayout();
         let mut closed = false;
         let mut g = qgfx::QGFX::new();
         // We're just re-rendering for 60fps right now.
