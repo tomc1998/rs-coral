@@ -9,7 +9,7 @@ use common::ScreenVec;
 /// 
 /// If the given entity has the wrong amount of children when laying out, then an assertion will be
 /// thrown (when in debug mode).
-#[derive(Clone, Hash, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, PartialEq, PartialOrd)]
 pub enum LayoutStrategy {
 
     /// Num children: 1
@@ -20,7 +20,13 @@ pub enum LayoutStrategy {
     /// Num children: 0
     /// 
     /// Maximise this component's size according to the constraints.
-    Max
+    Max,
+
+    /// Num children: 0
+    /// 
+    /// Size this component to be a lerp between the constraint's min / max. 
+    /// Works separately in x / y.
+    Proportion(f32, f32),
 
 }
 
@@ -29,13 +35,14 @@ impl LayoutStrategy {
         match *self {
             LayoutStrategy::Center => 1,
             LayoutStrategy::Max => 0,
+            LayoutStrategy::Proportion(_,_) => 0,
         }
     }
 }
 
 /// A component defining a component's layout - the layout strategy, the current offset, and its
 /// current size.
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Clone, PartialEq)]
 pub struct LayoutComponent {
     pub offset: ScreenVec,
     pub size: ScreenVec,

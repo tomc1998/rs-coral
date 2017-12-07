@@ -14,7 +14,7 @@ pub mod utils;
 pub use config::Config;
 pub use render::Controller as PaintController;
 
-use entity::Entity;
+use entity::{Entity, LayoutComponent, ChildrenComponent, LayoutStrategy};
 use common::{Constraints, ScreenVec};
 
 pub struct Coral {
@@ -89,6 +89,36 @@ impl Coral {
 
     pub fn set_root(&mut self, root: Entity) {
         self.root = Some(root);
+    }
+
+    /// Create an entity and add it to the world. This will NOT trigger a redraw - this must be
+    /// done manually! Otherwise, adding multiple children to the world would result in a bad state
+    /// whilst laying out.
+    /// 
+    /// # Params
+    /// * `parent` - The parent of this entity. If None, this becomes a root node - see set_root.
+    /// * `layout` - The layout strategy to use for this component.
+    pub fn create_entity(&mut self,
+                         parent: Option<Entity>,
+                         layout: LayoutStrategy) -> Entity {
+        // First, we need to build the entity
+        let entity = self.world.create_entity()
+            .with(LayoutComponent::new(layout))
+            .with(ChildrenComponent::new())
+            .build();
+
+        // Now, find the parent (if any) and add this entity as a child
+        if parent.is_some() {
+            let parent = parent.unwrap();
+            let mut children_storage = self.world.write();
+            let children : &mut ChildrenComponent = children_storage.get_mut(parent)
+                .expect("Tried to create a child entity, but parent entity had no children
+                        component");
+            children.children.push(entity);
+        }
+
+        // Finally, return the new entity
+        return entity;
     }
 
     /// Starts the application. This will initialise an OpenGL context, and block until the

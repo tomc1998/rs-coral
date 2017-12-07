@@ -23,9 +23,13 @@ pub fn debug_render(c: &PaintController, root: Entity, world: &specs::World) {
     while !visit_list.is_empty() {
         // Get the node + add its children
         let (pos, node) = visit_list.remove(0);
-        let layout : &LayoutComponent = layout_storage.get(root)
+        let layout : &LayoutComponent = layout_storage.get(node)
             .expect("Tried to layout an entity without a layout component!");
-        for c in utils::get_entity_children(node, world) { visit_list.push((pos + layout.offset, c)); }
+        for c in utils::get_entity_children(node, world) { 
+            let child_layout = layout_storage.get(c)
+                .expect("Tried to paint an entity without a layout component!");
+            visit_list.push((pos + child_layout.offset, c)); 
+        }
 
         // Now draw a rect
         let size = layout.size;
