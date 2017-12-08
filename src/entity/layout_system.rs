@@ -27,7 +27,7 @@ impl LayoutSystem {
 
     /// Layout the given component recursively. Alters the child, and returns the new size of the
     /// child for convenience.
-    fn layout(&mut self, root: Entity, 
+    pub fn layout(&mut self, root: Entity, 
               c: Constraints, 
               layout_storage: &mut specs::WriteStorage<LayoutComponent>,
               children_storage: &specs::ReadStorage<ChildrenComponent>) -> ScreenVec {
@@ -41,7 +41,7 @@ impl LayoutSystem {
 
         // Make sure we have the right amount of children for this layout strategy
         debug_assert_eq!(children.len(), 
-                         root_layout.strategy.expected_children(), 
+                         root_layout.strategy.expected_children().unwrap_or(children.len()), 
                          "Center layout strategy must have 1 child only");
 
         let final_size;
@@ -73,6 +73,10 @@ impl LayoutSystem {
                      ((c.max_h - c.min_h) as f32 * y) as i32)
                     .max(c.min_h as i32)
                     .min(c.max_h as i32));
+            }
+            LayoutStrategy::Custom(f) => {
+                // We need the min / max in case of weird FP error
+                final_size = f(root, c, layout_storage, children_storage, self);
             }
         }
 
